@@ -47,7 +47,7 @@ const AttendanceSchema = new Schema<IAttendance>(
     branchId: {
       type: Schema.Types.ObjectId,
       ref: "Branch",
-      required:true
+      required:true,
       index: true
     },
 
