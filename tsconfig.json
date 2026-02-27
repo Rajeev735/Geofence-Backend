@@ -1,23 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-
-    "module": "Node16",
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "moduleResolution": "Node16",
-
-    "rootDir": "src",
-    "outDir": "dist",
-
-    "strict": false,
-
+    "module": "Node16",
+    "target": "ES2020",
     "esModuleInterop": true,
-    "skipLibCheck": true,
-
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-
-    "types": ["node"]
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+    "skipLibCheck": true
+  }
 }

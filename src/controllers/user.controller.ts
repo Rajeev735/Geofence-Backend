@@ -40,6 +40,13 @@ export const getUsersUnderMe = async (req: any, res: Response) => {
   try {
     const { role, organizationId, branchId, zoneId } = req.user;
 
+    if (role === "USER") {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized"
+      });
+    }
+
     let filter: any = { organizationId };
 
     if (role === "BRANCH_ADMIN") {

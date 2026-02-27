@@ -39,13 +39,12 @@ export const registerOrgWithSuperAdmin = async (payload: any) => {
 ========================================= */
 
 export const login = async (
-  email: string,
-  password: string,
-  role: string
+  email:string,
+  password:string,
+  role:string
 ) => {
 
   const user = await User.findOne({ email });
-
   if (!user) throw new Error("Invalid credentials");
 
   if (user.role !== role)
@@ -55,12 +54,13 @@ export const login = async (
   if (!valid) throw new Error("Invalid credentials");
 
   const token = jwt.sign(
-    {
+    { 
+      name:user.name,
       userId: user._id,
       role: user.role,
-      organizationId: user.organizationId,
-      branchId: user.branchId,
-      zoneId: user.zoneId
+      organizationId: user.organizationId || null,
+      branchId: user.branchId || null,
+      zoneId: user.zoneId || null
     },
     process.env.JWT_SECRET!,
     { expiresIn: "7d" }
@@ -72,7 +72,27 @@ export const login = async (
       id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      mode: user.organizationId ? "ORG" : "PERSONAL"
     }
   };
+};
+export const registerPersonalUser = async (payload:any) => {
+
+  const exists = await User.findOne({ email: payload.email });
+  if (exists) throw new Error("Email already registered");
+
+  const hashedPassword = await bcrypt.hash(payload.password, 10);
+
+  const user = await User.create({
+    name: payload.name,
+    email: payload.email,
+    password: hashedPassword,
+    role: "USER",
+    organizationId: null,   // 👈 personal mode
+    branchId: null,
+    zoneId: null
+  });
+
+  return user;
 };

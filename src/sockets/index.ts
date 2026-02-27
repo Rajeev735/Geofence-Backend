@@ -2,15 +2,24 @@ import { io } from "../server";
 import jwt from "jsonwebtoken";
 
 io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-console.log("AUTH MIDDLEWARE RUNNING");
-  if (!token) return next(new Error("Unauthorized"));
-  console.log("Token:", socket.handshake.auth);
+  console.log("🔐 SOCKET AUTH MIDDLEWARE");
+
+  const token =
+    socket.handshake.auth?.token ||
+    socket.handshake.headers?.authorization?.split(" ")[1];
+
+  if (!token) {
+    return next(new Error("Unauthorized: token missing"));
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    (socket as any).user = decoded;
+
+    (socket as any).user = decoded; // contains _id, role, org, branch, zone
+
     next();
-  } catch {
-    next(new Error("Invalid token"));
+  } catch (err) {
+    console.error("JWT error:", err);
+    next(new Error("Unauthorized: invalid token"));
   }
 });

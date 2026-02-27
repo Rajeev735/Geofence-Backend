@@ -1,42 +1,97 @@
 import { io } from "../server";
 import Zone from "../Models/Zone";
+import Branch from "../Models/Branch";
 import Attendance from "../Models/Attendance";
 import inside from "point-in-polygon";
 
-io.on("connection", socket => {
+io.on("connection", async socket => {
   const user = (socket as any).user;
-  console.log("🟢 Socket connected:", socket.id);
+
+  console.log("🟢 Socket connected:", socket.id, user.role);
+
+  /* ================= ROOMS ================= */
+
+  socket.join(`org:${user.organizationId}`);
+
+  if (user.branchId)
+    socket.join(`branch:${user.organizationId}:${user.branchId}`);
+
+  if (user.zoneId)
+    socket.join(`zone:${user.organizationId}:${user.zoneId}`);
+
+  /* ================= DISCONNECT HANDLER (IMPORTANT) ================= */
+
+  socket.on("disconnect", () => {
+    emitExit();
+  });
+
+  const emitExit = () => {
+    io.to(`org:${user.organizationId}`).emit("USER_EXIT", { userId: user.userId });
+
+    if (user.branchId)
+      io.to(`branch:${user.organizationId}:${user.branchId}`)
+        .emit("USER_EXIT", { userId: user.userId });
+
+    if (user.zoneId)
+      io.to(`zone:${user.organizationId}:${user.zoneId}`)
+        .emit("USER_EXIT", { userId: user.userId });
+  };
+
+  /* ================= LOCATION ================= */
+
   socket.on("LOCATION_UPDATE", async ({ lat, lng }) => {
-    if (!user.zoneId) return;
-   console.log("u",user)
-    const zone = await Zone.findOne({
-      _id: user.zoneId,
-      organizationId: user.organizationId
-    });
 
-    if (!zone) return;
+    if (user.role === "SUPER_ADMIN") return;
 
-    const polygon: [number, number][] = zone.vertex.map(
-      (v: any) => [Number(v.longitude), Number(v.latitude)]
-    );
+    let inAllowedArea = true;
 
-    const inZone = inside(
-      [Number(lng), Number(lat)],
-      polygon
-    );
+    if (user.role === "USER" || user.role === "ZONE_ADMIN") {
+      const zone = await Zone.findOne({
+        _id: user.zoneId,
+        organizationId: user.organizationId
+      });
+      if (!zone) return;
+
+      const poly = zone.vertex.map(v => [
+        Number(v.longitude),
+        Number(v.latitude)
+      ]);
+
+      inAllowedArea = inside([lng, lat], poly);
+    }
+
+    if (user.role === "BRANCH_ADMIN") {
+      const branch = await Branch.findOne({
+        _id: user.branchId,
+        organizationId: user.organizationId
+      });
+      if (!branch) return;
+
+      const poly = branch.vertex.map(v => [
+        Number(v.longitude),
+        Number(v.latitude)
+      ]);
+
+      inAllowedArea = inside([lng, lat], poly);
+    }
 
     const today = new Date().toISOString().split("T")[0];
 
     let record = await Attendance.findOne({
       userId: user.userId,
-      date: today,
-      organizationId: user.organizationId
+      organizationId: user.organizationId,
+      date: today
     });
 
-    const lastSession = record?.sessions[record.sessions.length - 1];
+    const lastSession =
+      record && record.sessions.length
+        ? record.sessions[record.sessions.length - 1]
+        : null;
 
-    /* ===== AUTO CHECK IN ===== */
-    if (inZone && (!record || lastSession?.checkOut)) {
+    /* ===== CHECK IN ===== */
+
+    if (inAllowedArea && (!record || lastSession?.checkOut)) {
+
       if (!record) {
         record = await Attendance.create({
           organizationId: user.organizationId,
@@ -49,17 +104,22 @@ io.on("connection", socket => {
         });
       }
 
-      record.sessions.push({
+      const newSession = {
         checkIn: new Date(),
         duration: 0
-      });
+      };
 
+      record.sessions.push(newSession);
       await record.save();
-      socket.emit("STATUS", "CHECKED_IN");
+
+      broadcast(lat, lng, true, newSession.checkIn);
+      return;
     }
 
-    /* ===== AUTO CHECK OUT ===== */
-    if (!inZone && record && lastSession && !lastSession.checkOut) {
+    /* ===== CHECK OUT ===== */
+
+    if (!inAllowedArea && record && lastSession && !lastSession.checkOut) {
+
       lastSession.checkOut = new Date();
 
       const mins =
@@ -69,14 +129,38 @@ io.on("connection", socket => {
       record.totalDuration += lastSession.duration;
 
       await record.save();
-      socket.emit("STATUS", "CHECKED_OUT");
+
+      emitExit();
+      return;
     }
-    console.log("Broadcasting location:", user.userId, lat, lng, inZone);
-    socket.broadcast.emit("USER_LOCATION", {
-  userId: user.userId,
-  lat,
-  lng,
-  inZone
-});
+
+    /* ===== STILL INSIDE ===== */
+
+    if (inAllowedArea && lastSession && !lastSession.checkOut) {
+      broadcast(lat, lng, true, lastSession.checkIn);
+    }
   });
+
+  /* ================= BROADCAST ================= */
+
+  const broadcast = (lat: number, lng: number, inZone: boolean, entryTime?: Date) => {
+    const payload = {
+      userId: user.userId,
+      lat,
+      lng,
+      inZone,
+      entryTime,
+      name:user.name
+    };
+
+    io.to(`org:${user.organizationId}`).emit("USER_LOCATION", payload);
+
+    if (user.branchId)
+      io.to(`branch:${user.organizationId}:${user.branchId}`)
+        .emit("USER_LOCATION", payload);
+
+    if (user.zoneId)
+      io.to(`zone:${user.organizationId}:${user.zoneId}`)
+        .emit("USER_LOCATION", payload);
+  };
 });

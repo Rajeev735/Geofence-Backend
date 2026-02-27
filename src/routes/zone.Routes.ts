@@ -5,15 +5,15 @@ import {
   getZonesController
 } from "../controllers/zone.controller";
 
-import { protect } from "../Middlewares/auth.middleware";
+import { allowRoles, protect } from "../Middlewares/auth.middleware";
 
 const zoneRoutes = Router();
 
 /* ================= PROTECTED ================= */
 
-zoneRoutes.post("/", protect, createZoneController);
+zoneRoutes.post("/", protect,allowRoles("SUPER_ADMIN"), createZoneController);
 
-zoneRoutes.put("/:zoneId", protect, updateZoneController);
+zoneRoutes.put("/:zoneId", protect,allowRoles("SUPER_ADMIN"), updateZoneController);
 
 zoneRoutes.get("/", protect, getZonesController);
 

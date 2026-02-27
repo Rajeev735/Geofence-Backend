@@ -5,10 +5,7 @@ import * as AuthService from "../services/auth.service";
    REGISTER ORGANIZATION + SUPER ADMIN
 ========================================= */
 
-export const registerOrganization = async (
-  req: Request,
-  res: Response
-) => {
+export const registerOrganization = async (req:Request, res:Response) => {
   try {
     const data = await AuthService.registerOrgWithSuperAdmin(req.body);
 
@@ -18,7 +15,7 @@ export const registerOrganization = async (
       superAdmin: data.superAdmin
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
     res.status(400).json({
       success: false,
       message: err.message
@@ -27,13 +24,31 @@ export const registerOrganization = async (
 };
 
 /* =========================================
-   LOGIN (ROLE-BOUND)
+   REGISTER PERSONAL USER
 ========================================= */
 
-export const login = async (
-  req: Request,
-  res: Response
-) => {
+export const registerPersonal = async (req:Request, res:Response) => {
+  try {
+    const user = await AuthService.registerPersonalUser(req.body);
+
+    res.status(201).json({
+      success: true,
+      user
+    });
+
+  } catch (err:any) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+/* =========================================
+   LOGIN
+========================================= */
+
+export const login = async (req:Request, res:Response) => {
   try {
     const { email, password, role } = req.body;
 
@@ -46,13 +61,13 @@ export const login = async (
 
     const data = await AuthService.login(email, password, role);
 
-    res.json({
+    res.status(200).json({
       success: true,
       token: data.token,
       user: data.user
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
     res.status(401).json({
       success: false,
       message: err.message

@@ -4,12 +4,12 @@ import {
   getMyBranchesController,
   updateBranchController
 } from "../controllers/branch.controller";
-import { protect } from "../Middlewares/auth.middleware";
+import { allowRoles, protect } from "../Middlewares/auth.middleware";
 
 const branchRoutes = Router();
 
-branchRoutes.post("/create",protect, createBranchController);
-branchRoutes.put("/:branchId",protect, updateBranchController);
+branchRoutes.post("/create",protect,allowRoles("SUPER_ADMIN"), createBranchController);
+branchRoutes.put("/:branchId",protect, allowRoles("SUPER_ADMIN"),updateBranchController);
 branchRoutes.get("/", protect, getMyBranchesController);
 
 export default branchRoutes;

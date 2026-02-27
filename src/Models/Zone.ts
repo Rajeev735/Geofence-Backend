@@ -10,6 +10,7 @@ export interface IZone extends Document {
   }[];
   area?: number;
   perimeter?: number;
+  ownerUserId:Schema.Types.ObjectId
 }
 
 const ZoneSchema = new Schema<IZone>(
@@ -25,9 +26,14 @@ const ZoneSchema = new Schema<IZone>(
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
-      required: true
+      default:null
     },
 
+ownerUserId: {
+  type: Schema.Types.ObjectId,
+  ref: "User",
+  default: null
+},
     area: Number,
     perimeter: Number,
 

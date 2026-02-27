@@ -45,7 +45,7 @@ const UserSchema = new Schema<IUser>(
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
-      required: true,
+      default:null,
       index: true
     },
 

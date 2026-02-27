@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import * as ZoneService from "../services/zone.service";
 
-/* ================= CREATE ZONE ================= */
+/* =========================================
+   CREATE ZONE
+========================================= */
 
-export const createZoneController = async (req: any, res: Response) => {
+export const createZoneController = async (req:any, res:Response) => {
   try {
     const zone = await ZoneService.createZone(req.user, req.body);
 
@@ -12,7 +14,7 @@ export const createZoneController = async (req: any, res: Response) => {
       zone
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
     res.status(400).json({
       success: false,
       message: err.message
@@ -20,16 +22,15 @@ export const createZoneController = async (req: any, res: Response) => {
   }
 };
 
+/* =========================================
+   UPDATE ZONE
+========================================= */
 
-/* ================= UPDATE ZONE ================= */
-
-export const updateZoneController = async (req: any, res: Response) => {
+export const updateZoneController = async (req:any, res:Response) => {
   try {
-    const zoneId = req.params.zoneId;
-
     const zone = await ZoneService.updateZone(
       req.user,
-      zoneId,
+      req.params.zoneId,
       req.body
     );
 
@@ -38,7 +39,7 @@ export const updateZoneController = async (req: any, res: Response) => {
       zone
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
     res.status(400).json({
       success: false,
       message: err.message
@@ -46,10 +47,11 @@ export const updateZoneController = async (req: any, res: Response) => {
   }
 };
 
+/* =========================================
+   GET ZONES
+========================================= */
 
-/* ================= GET ZONES BY ROLE ================= */
-
-export const getZonesController = async (req: any, res: Response) => {
+export const getZonesController = async (req:any, res:Response) => {
   try {
     const zones = await ZoneService.getZonesByScope(req.user);
 
@@ -58,7 +60,7 @@ export const getZonesController = async (req: any, res: Response) => {
       zones
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
     res.status(400).json({
       success: false,
       message: err.message

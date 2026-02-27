@@ -13,6 +13,7 @@ export interface IBranch extends Document {
   vertex: ICoordinate[];
   area?: number;
   perimeter?: number;
+  ownerUserId: mongoose.Types.ObjectId;
 }
 
 const BranchSchema = new Schema<IBranch>(
@@ -22,7 +23,8 @@ const BranchSchema = new Schema<IBranch>(
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
-      required:true
+     
+      default:null
     },
 
     countryName: String,
@@ -30,7 +32,12 @@ const BranchSchema = new Schema<IBranch>(
 
     area: Number,
     perimeter: Number,
-
+  
+    ownerUserId: {
+  type: Schema.Types.ObjectId,
+  ref: "User",
+  default: null
+},
     vertex: [
       {
         latitude: String,
