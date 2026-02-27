@@ -17,7 +17,9 @@ app.use(cors());
 app.use(express.json());
 
 
-
+app.get("/",(req, res)=>{
+  res.send("Working")
+})
 /* Routes */
 app.use("/api/orgs", orgRoutes);
 app.use("/api/branch", branchRoutes);
