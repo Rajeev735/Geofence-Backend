@@ -11,9 +11,9 @@ const zoneRoutes = Router();
 
 /* ================= PROTECTED ================= */
 
-zoneRoutes.post("/", protect,allowRoles("SUPER_ADMIN"), createZoneController);
+zoneRoutes.post("/", protect, createZoneController);
 
-zoneRoutes.put("/:zoneId", protect,allowRoles("SUPER_ADMIN"), updateZoneController);
+zoneRoutes.put("/:zoneId", protect, updateZoneController);
 
 zoneRoutes.get("/", protect, getZonesController);
 
