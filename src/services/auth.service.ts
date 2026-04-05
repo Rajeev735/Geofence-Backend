@@ -47,8 +47,7 @@ export const login = async (
   const user = await User.findOne({ email });
   if (!user) throw new Error("Invalid credentials");
 
-  if (user.role !== role)
-    throw new Error("Not authorized for this role");
+  
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) throw new Error("Invalid credentials");

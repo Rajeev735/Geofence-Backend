@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface ISession {
+interface ISession { 
   checkIn: Date;
   checkOut?: Date;
   duration: number; // minutes

@@ -9,7 +9,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 7000;
 
-const server = http.createServer(app);
+const server = http.createServer(app) ;
 
 export const io = new Server(server, {
   cors: {
